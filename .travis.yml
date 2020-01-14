@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true react-test npm run test -- --coverage
+
+after_success:
+  - docker build -t kelvinlwy/multi-client ./client
+  - docker build -t kelvinlwy/multi-nginx ./nginx
+  - docker build -t kelvinlwy/multi-server ./server
+  - docker build -t kelvinlwy/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push kelvinlwy/multi-client
+  - docker push kelvinlwy/multi-nginx
+  - docker push kelvinlwy/multi-server
+  - docker push kelvinlwy/multi-worker  
